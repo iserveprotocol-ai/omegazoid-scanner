@@ -134,13 +134,13 @@ class CryptoScanner:
         print(f"✓ Using fallback list of {len(cryptos)} major cryptocurrencies")
         return cryptos
     
-    def get_top_cryptos_from_cmc(self, limit=500, filter_kraken=False, filter_cryptocom=False):
+    def get_top_cryptos_from_cmc(self, limit=250, filter_kraken=False, filter_cryptocom=False):
         """
         Get top cryptocurrencies from CoinMarketCap API by market cap
         Returns Yahoo Finance compatible tickers
         
         Args:
-            limit: Number of cryptos to fetch
+            limit: Number of cryptos to fetch (default: 250)
             filter_kraken: If True, only return cryptos tradable on Kraken
             filter_cryptocom: If True, only return cryptos tradable on Crypto.com
         """

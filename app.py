@@ -183,11 +183,11 @@ def scan():
         if kraken_only:
             # Re-initialize with Kraken filter
             scanner = CryptoScanner(crypto_list=None, use_cmc=True)
-            scanner.crypto_list = scanner.get_top_cryptos_from_cmc(limit=500, filter_kraken=True)
+            scanner.crypto_list = scanner.get_top_cryptos_from_cmc(limit=250, filter_kraken=True)
         elif cryptocom_only:
             # Re-initialize with Crypto.com filter
             scanner = CryptoScanner(crypto_list=None, use_cmc=True)
-            scanner.crypto_list = scanner.get_top_cryptos_from_cmc(limit=500, filter_cryptocom=True)
+            scanner.crypto_list = scanner.get_top_cryptos_from_cmc(limit=250, filter_cryptocom=True)
         
         # Run scan
         scan_status["message"] = f"Scanning {len(scanner.crypto_list)} cryptocurrencies..."
