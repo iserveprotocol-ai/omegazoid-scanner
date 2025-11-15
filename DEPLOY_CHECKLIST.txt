@@ -1,0 +1,130 @@
+================================================================================
+        CRYPTO SCANNER - QUICK DEPLOYMENT CHECKLIST
+================================================================================
+
+OPTION 1: RUN ON ANOTHER COMPUTER (5 Minutes)
+================================================================================
+[ ] Copy entire "scanner" folder to new computer
+[ ] Install Python 3.10+ (python.org)
+[ ] Open Command Prompt in scanner folder
+[ ] Run: pip install -r requirements.txt
+[ ] Run: python app.py
+[ ] Open browser: http://localhost:5000
+✓ DONE! Scanner is running
+
+================================================================================
+OPTION 2: DEPLOY TO RENDER.COM - FREE WEBSITE (15 Minutes)
+================================================================================
+STEP 1: PREPARE CODE
+[ ] Create GitHub account (github.com) if you don't have one
+[ ] Create new repository called "crypto-scanner"
+[ ] Upload these files to GitHub:
+    [ ] app.py
+    [ ] stock_scanner.py
+    [ ] scanner_presets.py
+    [ ] requirements.txt
+    [ ] Procfile
+    [ ] templates/index.html
+
+STEP 2: DEPLOY TO RENDER
+[ ] Go to render.com and sign up (free)
+[ ] Click "New +" → "Web Service"
+[ ] Click "Connect GitHub"
+[ ] Select your "crypto-scanner" repository
+[ ] Fill in settings:
+    Name: crypto-scanner
+    Region: Select closest to you
+    Branch: main
+    Runtime: Python 3
+    Build Command: pip install -r requirements.txt
+    Start Command: gunicorn app:app
+    Instance Type: Free
+[ ] Click "Advanced" → "Add Environment Variable"
+    Key: CMC_API_KEY
+    Value: 24fb5bf708c346b099c9900c3b1082bc
+[ ] Click "Create Web Service"
+[ ] Wait 3-5 minutes for deployment
+
+STEP 3: ACCESS YOUR LIVE WEBSITE
+[ ] Get your URL: https://crypto-scanner-xxxx.onrender.com
+[ ] Open URL in browser
+[ ] Test scanning
+✓ DONE! Your scanner is live on the internet!
+
+================================================================================
+OPTION 3: RAILWAY.APP - FASTEST DEPLOYMENT (10 Minutes)
+================================================================================
+[ ] Upload code to GitHub (same as Option 2, Step 1)
+[ ] Go to railway.app
+[ ] Click "Start a New Project"
+[ ] Select "Deploy from GitHub repo"
+[ ] Choose "crypto-scanner" repository
+[ ] Add environment variable:
+    CMC_API_KEY = 24fb5bf708c346b099c9900c3b1082bc
+[ ] Wait 2-3 minutes
+[ ] Get URL from Railway dashboard
+✓ DONE! Live website ready
+
+================================================================================
+FILES YOU NEED FOR DEPLOYMENT
+================================================================================
+Essential files (must include):
+✓ app.py                   - Main app
+✓ stock_scanner.py         - Scanner engine
+✓ scanner_presets.py       - Configurations
+✓ requirements.txt         - Dependencies
+✓ Procfile                 - Deployment config
+✓ templates/index.html     - Web interface
+
+Optional (helpful):
+- .gitignore               - Exclude junk files
+- README.txt               - Instructions
+
+NOT needed online:
+- start_web.bat            - Windows only
+- *.pyc files              - Temporary Python files
+- __pycache__/             - Python cache
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+"Build failed" on Render/Railway
+→ Check requirements.txt is uploaded
+→ Make sure Procfile exists
+
+"Application error" when opening URL
+→ Check environment variable CMC_API_KEY is set
+→ Look at deployment logs for errors
+
+"No results found"
+→ Lower min_score to 30-40
+→ Uncheck "Kraken only" if checked
+
+Can't access from phone
+→ Make sure you're using the HTTPS URL from Render/Railway
+→ Not http://localhost (that's local only)
+
+================================================================================
+BENEFITS OF ONLINE DEPLOYMENT
+================================================================================
+✓ Access from any device (phone, tablet, laptop)
+✓ No need to keep your computer running
+✓ Share with friends (just send them the URL)
+✓ Automatic updates when you push to GitHub
+✓ FREE on Render/Railway (generous free tier)
+✓ Professional HTTPS security included
+✓ Scan 24/7 without your computer on
+
+================================================================================
+SECURITY NOTE
+================================================================================
+The CoinMarketCap API key is set as an environment variable for security.
+Free tier allows 10,000 API calls/month - more than enough for personal use.
+
+If sharing publicly, consider:
+- Add user authentication
+- Rate limiting
+- Your own CMC API key
+
+================================================================================

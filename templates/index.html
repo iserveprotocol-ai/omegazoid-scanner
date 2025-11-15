@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trend Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+        
+        .results {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .results-count {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .positive {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .score-high { background: #10b981; }
+        .score-medium { background: #f59e0b; }
+        .score-low { background: #6b7280; }
+        
+        .crypto-symbol {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .info-panel h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .action-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #10b981;
+        }
+        
+        .action-item strong {
+            color: #667eea;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+        }
+        
+        .detail-row {
+            display: none;
+            background: #f8f9fa;
+        }
+        
+        .detail-row.show {
+            display: table-row;
+        }
+        
+        .detail-cell {
+            padding: 20px !important;
+            border-top: 2px solid #667eea;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-section {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .detail-section h4 {
+            margin-top: 0;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+        
+        .clickable-row {
+            cursor: pointer;
+        }
+        
+        .clickable-row:hover {
+            background: #f0f0f0 !important;
+        }
+        
+        .buy-now-highlight {
+            background: linear-gradient(90deg, #dcfce7 0%, #d1fae5 100%) !important;
+            border-left: 5px solid #10b981 !important;
+            font-weight: 600;
+        }
+        
+        .buy-now-highlight:hover {
+            background: linear-gradient(90deg, #bbf7d0 0%, #d1fae5 100%) !important;
+        }
+        
+        .buy-now-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .control-group { grid-template-columns: 1fr; }
+            table { font-size: 0.9em; }
+            th, td { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h1 style="margin: 0;">🚀 Crypto Trend Scanner</h1>
+                    <p class="subtitle" style="margin: 5px 0 0 0;">Scan top 500 cryptocurrencies for uptrend opportunities • Powered by CoinMarketCap & Yahoo Finance</p>
+                </div>
+                <div>
+                    <a href="https://twitter.com/ScamHoundCrypto" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #1DA1F2; color: white; text-decoration: none; border-radius: 25px; font-weight: 600; transition: all 0.3s; box-shadow: 0 2px 8px rgba(29, 161, 242, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(29, 161, 242, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(29, 161, 242, 0.3)'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                        @ScamHoundCrypto
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Sector Performance Panel -->
+            <div id="sectorPerformance" style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border: 2px solid #dee2e6; display: none;">
+                <h3 style="margin: 0 0 15px 0; color: #495057; font-size: 1.1em; display: flex; align-items: center; gap: 10px;">
+                    <span>📊</span>
+                    <span>Sector Performance Summary</span>
+                    <span style="font-size: 0.75em; color: #6c757d; font-weight: normal;">(from scan results)</span>
+                </h3>
+                <div id="sectorGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Market Context Panel -->
+            <div id="marketContext" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Fear & Greed Index</div>
+                    <div id="fearGreedValue" style="font-size: 1.5em; font-weight: bold;">--</div>
+                    <div id="fearGreedLabel" style="font-size: 0.85em; color: #888;">Loading...</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">BTC Dominance</div>
+                    <div id="btcDominance" style="font-size: 1.5em; font-weight: bold;">--</div>
+                    <div style="font-size: 0.85em; color: #888;">Market Share</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">ETH Dominance</div>
+                    <div id="ethDominance" style="font-size: 1.5em; font-weight: bold;">--</div>
+                    <div style="font-size: 0.85em; color: #888;">Market Share</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Market Regime</div>
+                    <div id="marketRegime" style="font-size: 1.2em; font-weight: bold;">--</div>
+                    <div style="font-size: 0.85em; color: #888;">Season</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <div class="input-group">
+                    <label for="preset">Scan Preset</label>
+                    <select id="preset">
+                        <option value="all">All Cryptos</option>
+                        <option value="aggressive">Aggressive Growth</option>
+                        <option value="conservative">Conservative</option>
+                        <option value="pullback">Pullback Entry</option>
+                        <option value="breakout">Breakout Candidates</option>
+                        <option value="largecap">Large Cap Only</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="minScore">Minimum Score (0-100)</label>
+                    <input type="number" id="minScore" value="40" min="0" max="100">
+                    <small style="color: #666; margin-top: 4px;">Lower = more results (try 30-40 in bear markets)</small>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="krakenOnly" style="width: auto; margin-right: 8px;">
+                        Only show cryptos tradable on Kraken
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 4px;">Filter to only cryptos you can actually trade on Kraken exchange</small>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        <input type="checkbox" id="cryptocomOnly" style="width: auto; margin-right: 8px;">
+                        Only show cryptos tradable on Crypto.com
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 4px;">Filter to only cryptos you can trade on Crypto.com exchange</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="maxResults">Max Results</label>
+                    <input type="number" id="maxResults" value="50" min="1" max="200">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="runScan()">
+                    <span id="scanBtnText">Start Scan</span>
+                </button>
+                <button class="btn-secondary" onclick="exportCSV()" id="exportBtn" disabled>Export CSV</button>
+                <button class="btn-secondary" onclick="showCorrelation()" id="corrBtn" disabled>Correlation Matrix</button>
+                <button class="btn-secondary" onclick="showPositionCalculator()">📊 Position Calculator</button>
+            </div>
+        </div>
+        
+        <div class="status" id="statusBox">
+            <div id="statusMessage">Initializing...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="results">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">Ready to scan</div>
+                <div id="timestamp"></div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>📚 How to Read These Results & Set Your Orders</h3>
+                <div class="action-item">
+                    <strong>Score (0-100):</strong> Overall trend strength. 80+ = very strong, 60-79 = strong, 40-59 = moderate, below 40 = weak/bearish
+                </div>
+                <div class="action-item">
+                    <strong>Stop Loss (SELL LOW):</strong> Price to EXIT if trade goes wrong. Set your STOP LOSS order here (protects you from big losses)
+                </div>
+                <div class="action-item">
+                    <strong>Resistance (SELL HIGH):</strong> Price target to TAKE PROFITS. Set your SELL order here (locks in gains)
+                </div>
+                <div class="action-item">
+                    <strong>Support (BUY LOW):</strong> Best entry if price pulls back. OR buy NOW if strong uptrend (70+ score)
+                </div>
+                <div class="action-item">
+                    <strong>R:R Ratio:</strong> Risk vs Reward. 2:1+ means you could make $2 for every $1 risked. Higher is better
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ KEY DECISION:</strong> High score (70+) = Buy now before it runs away! Medium score (40-69) = Wait for pullback to support for better entry
+                </div>
+                <div class="warning-box">
+                    <strong>👉 Click any row for TWO entry strategies:</strong> Conservative (wait for pullback) vs Aggressive (buy now/breakout)
+                </div>
+            </div>
+            
+            <div id="resultsContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <h3>No scan results yet</h3>
+                    <p>Click "Start Scan" to find trending cryptocurrencies</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let scanInProgress = false;
+        
+        // Load market context on page load
+        window.addEventListener('load', function() {
+            loadMarketContext();
+        });
+        
+        async function loadMarketContext() {
+            try {
+                const response = await fetch('/market-context');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const data = result.data;
+                    
+                    // Fear & Greed Index
+                    if (data.fear_greed) {
+                        document.getElementById('fearGreedValue').textContent = data.fear_greed.value;
+                        document.getElementById('fearGreedLabel').textContent = data.fear_greed.classification;
+                        
+                        // Color code
+                        const value = data.fear_greed.value;
+                        const element = document.getElementById('fearGreedValue');
+                        if (value >= 75) element.style.color = '#10b981'; // Extreme Greed - Green
+                        else if (value >= 55) element.style.color = '#3b82f6'; // Greed - Blue
+                        else if (value >= 45) element.style.color = '#6b7280'; // Neutral - Gray
+                        else if (value >= 25) element.style.color = '#f59e0b'; // Fear - Orange
+                        else element.style.color = '#ef4444'; // Extreme Fear - Red
+                    }
+                    
+                    // Bitcoin & ETH Dominance
+                    if (data.dominance) {
+                        document.getElementById('btcDominance').textContent = data.dominance.btc + '%';
+                        document.getElementById('ethDominance').textContent = data.dominance.eth + '%';
+                        
+                        // Determine market regime
+                        const btcDom = data.dominance.btc;
+                        let regime = '';
+                        if (btcDom > 60) {
+                            regime = '🔵 BTC Season';
+                        } else if (btcDom < 40) {
+                            regime = '🟪 Altcoin Season';
+                        } else {
+                            regime = '🟡 Mixed Market';
+                        }
+                        document.getElementById('marketRegime').textContent = regime;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading market context:', error);
+            }
+        }
+        
+        async function runScan() {
+            if (scanInProgress) return;
+            
+            scanInProgress = true;
+            const scanBtn = document.querySelector('.btn-primary');
+            const btnText = document.getElementById('scanBtnText');
+            
+            btnText.innerHTML = '<span class="loading"></span> Scanning...';
+            scanBtn.disabled = true;
+            document.getElementById('exportBtn').disabled = true;
+            document.getElementById('statusBox').classList.add('show');
+            
+            const preset = document.getElementById('preset').value;
+            const minScore = parseInt(document.getElementById('minScore').value);
+            const maxResults = parseInt(document.getElementById('maxResults').value);
+            const krakenOnly = document.getElementById('krakenOnly').checked;
+            const cryptocomOnly = document.getElementById('cryptocomOnly').checked;
+            
+            // Ensure only one exchange filter is selected
+            if (krakenOnly && cryptocomOnly) {
+                alert('Please select only one exchange filter (Kraken OR Crypto.com)');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ preset, min_score: minScore, max_results: maxResults, kraken_only: krakenOnly, cryptocom_only: cryptocomOnly })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                    document.getElementById('exportBtn').disabled = false;
+                    document.getElementById('corrBtn').disabled = false;
+                } else {
+                    alert('Scan failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                scanInProgress = false;
+                btnText.textContent = 'Start Scan';
+                scanBtn.disabled = false;
+                document.getElementById('statusBox').classList.remove('show');
+            }
+        }
+        
+        function displayResults(data) {
+            const container = document.getElementById('resultsContainer');
+            const countEl = document.getElementById('resultsCount');
+            const timestampEl = document.getElementById('timestamp');
+            
+            countEl.textContent = `Found ${data.count} cryptos`;
+            timestampEl.textContent = `Scanned: ${data.timestamp}`;
+            
+            if (data.count === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h3>No results found</h3>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+                document.getElementById('sectorPerformance').style.display = 'none';
+                return;
+            }
+            
+            // Calculate sector performance
+            displaySectorPerformance(data.data);
+            
+            // Determine "Buy Now" candidates (top 3 with strongest signals)
+            let buyNowCandidates = [];
+            if (data.count >= 3) {
+                // Score cryptos for "buy now" recommendation
+                const scoredForBuyNow = data.data.map((item, index) => {
+                    let buyScore = 0;
+                    
+                    // High overall score (most important)
+                    if (item.score >= 70) buyScore += 30;
+                    else if (item.score >= 60) buyScore += 15;
+                    
+                    // Strong trend strength (ADX)
+                    if (item.adx > 30) buyScore += 20;
+                    else if (item.adx > 25) buyScore += 10;
+                    
+                    // Good momentum (RSI in buying zone)
+                    if (item.rsi >= 55 && item.rsi <= 70) buyScore += 15;
+                    
+                    // Weekly trend confirmed
+                    if (item.weekly_bullish) buyScore += 15;
+                    
+                    // Good risk/reward
+                    if (item.risk_reward > 2) buyScore += 10;
+                    
+                    // Strong recent performance
+                    if (item.week_change > 5) buyScore += 10;
+                    
+                    // Penalty for warnings
+                    if (item.volume_divergence) buyScore -= 20;
+                    if (item.warnings && item.warnings.length > 0) buyScore -= 10;
+                    
+                    return { index, buyScore, ticker: item.ticker };
+                });
+                
+                // Sort by buy score and get top 3
+                scoredForBuyNow.sort((a, b) => b.buyScore - a.buyScore);
+                buyNowCandidates = scoredForBuyNow.slice(0, 3).map(x => x.index);
+            }
+            
+            let html = '';
+            
+            // Add "Buy Now" recommendation box if we have 3+ results
+            if (buyNowCandidates.length > 0) {
+                html += `
+                    <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%); border-radius: 12px; border-left: 6px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <h3 style="margin: 0 0 15px 0; color: #059669; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5em;">🚀</span>
+                            <span>TOP 3 BUY NOW RECOMMENDATIONS</span>
+                        </h3>
+                        <p style="margin: 0 0 15px 0; color: #047857; font-size: 1.05em;">
+                            Based on strongest trend signals, high scores, momentum, and weekly confirmation:
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                `;
+                
+                buyNowCandidates.forEach((candIndex, i) => {
+                    const item = data.data[candIndex];
+                    const priceFormatted = item.price >= 1 ? item.price.toFixed(2) : item.price.toFixed(6);
+                    html += `
+                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #10b981;">
+                            <div style="font-size: 1.3em; font-weight: bold; color: #059669; margin-bottom: 8px;">
+                                #${i + 1}: ${item.ticker.replace('-USD', '')}
+                            </div>
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
+                                <strong>Price:</strong> $${priceFormatted}
+                            </div>
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
+                                <strong>Score:</strong> <span style="color: #10b981; font-weight: bold;">${item.score}/100</span>
+                            </div>
+                            <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
+                                <strong>ADX:</strong> ${item.adx.toFixed(0)} | <strong>RSI:</strong> ${item.rsi.toFixed(0)}
+                            </div>
+                            <div style="font-size: 0.9em; color: #666;">
+                                <strong>R:R:</strong> <span style="color: #10b981; font-weight: bold;">${item.risk_reward.toFixed(1)}:1</span>
+                            </div>
+                            ${item.weekly_bullish ? '<div style="margin-top: 8px; padding: 4px 8px; background: #dcfce7; border-radius: 4px; font-size: 0.85em; color: #059669; text-align: center;">✅ Weekly Confirmed</div>' : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                        <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                            <strong style="color: #d97706;">⚡ Action:</strong> These cryptos have the strongest uptrends right now. Consider entering at current price or on minor pullback. <strong>Always use stop losses!</strong>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <strong>Legend:</strong> 
+                    <span style="margin-left: 15px;">✅ = Bullish Signal</span>
+                    <span style="margin-left: 15px;">⚠️ = Warning</span>
+                    <span style="margin-left: 15px;">R:R = Risk:Reward Ratio</span>
+                    <span style="margin-left: 15px;">ADX = Trend Strength</span>
+                    <span style="margin-left: 15px; padding: 4px 10px; background: #10b981; color: white; border-radius: 4px;">🚀 BUY NOW = Top 3 Strongest Trends</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Crypto</th>
+                            <th>Sector</th>
+                            <th>Score</th>
+                            <th>Price</th>
+                            <th>Stop Loss</th>
+                            <th>Risk %</th>
+                            <th>R:R</th>
+                            <th>ADX</th>
+                            <th>RSI</th>
+                            <th>Support</th>
+                            <th>Resistance</th>
+                            <th>Signals & Warnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.data.forEach((item, index) => {
+                const scoreClass = item.score >= 80 ? 'score-high' : item.score >= 65 ? 'score-medium' : 'score-low';
+                const priceFormatted = item.price >= 1 ? item.price.toFixed(2) : item.price.toFixed(6);
+                const stopLossFormatted = item.stop_loss >= 1 ? item.stop_loss.toFixed(2) : item.stop_loss.toFixed(6);
+                const rank = item.market_cap_rank || '-';
+                const supportFormatted = item.support >= 1 ? item.support.toFixed(2) : item.support.toFixed(6);
+                const resistanceFormatted = item.resistance >= 1 ? item.resistance.toFixed(2) : item.resistance.toFixed(6);
+                
+                // Sector badge color
+                const sectorColors = {
+                    'Layer 1': '#3b82f6',
+                    'Layer 2': '#8b5cf6',
+                    'DeFi': '#10b981',
+                    'Meme': '#f59e0b',
+                    'Gaming': '#ec4899',
+                    'AI': '#06b6d4',
+                    'Oracle': '#6366f1',
+                    'Privacy': '#64748b',
+                    'Storage': '#14b8a6',
+                    'Exchange': '#eab308',
+                    'NFT': '#f97316',
+                    'Other': '#9ca3af'
+                };
+                const sectorColor = sectorColors[item.sector] || '#9ca3af';
+                
+                // Risk/Reward color coding
+                const rrClass = item.risk_reward > 2 ? 'positive' : item.risk_reward > 1.5 ? '' : 'negative';
+                
+                // ADX interpretation
+                const adxClass = item.adx > 25 ? 'positive' : 'negative';
+                const adxText = item.adx > 25 ? 'Strong' : 'Weak';
+                
+                // Build signals list
+                let signals = [];
+                if (item.weekly_bullish) signals.push('✅ Weekly');
+                if (item.volume_divergence) signals.push('⚠️ Vol Div');
+                item.warnings.forEach(w => signals.push(w));
+                
+                const signalsText = signals.length > 0 ? signals.join('<br>') : '-';
+                
+                // Check if this is a "Buy Now" candidate
+                const isBuyNow = buyNowCandidates.includes(index);
+                const rowClass = isBuyNow ? 'clickable-row buy-now-highlight' : 'clickable-row';
+                const buyNowBadge = isBuyNow ? '<span class="buy-now-badge">🚀 BUY NOW</span>' : '';
+                
+                // Main row
+                html += `
+                    <tr class="${rowClass}" onclick="toggleDetails(${index})">
+                        <td><strong>${rank}</strong></td>
+                        <td><span class="crypto-symbol">${item.ticker.replace('-USD', '')}</span>${buyNowBadge}</td>
+                        <td><span style="display: inline-block; padding: 4px 8px; background: ${sectorColor}; color: white; border-radius: 4px; font-size: 0.85em;">${item.sector}</span></td>
+                        <td><span class="score-badge ${scoreClass}">${item.score}</span></td>
+                        <td>$${priceFormatted}</td>
+                        <td>$${stopLossFormatted}</td>
+                        <td class="negative">${item.stop_loss_pct.toFixed(1)}%</td>
+                        <td class="${rrClass}"><strong>${item.risk_reward.toFixed(1)}:1</strong></td>
+                        <td class="${adxClass}">${item.adx.toFixed(0)} ${adxText}</td>
+                        <td>${item.rsi.toFixed(1)}</td>
+                        <td><small>$${supportFormatted}</small></td>
+                        <td><small>$${resistanceFormatted}</small></td>
+                        <td><small>${signalsText}</small></td>
+                    </tr>
+                `;
+                
+                // Detail row with trading instructions
+                html += `
+                    <tr class="detail-row" id="detail-${index}">
+                        <td colspan="12" class="detail-cell">
+                            <div class="detail-grid">
+                                <div class="detail-section">
+                                    <h4>📊 TradingView Chart</h4>
+                                    <div style="height: 400px; width: 100%;">
+                                        <iframe 
+                                            id="chart-${index}"
+                                            style="width: 100%; height: 100%; border: none; border-radius: 8px;"
+                                            src="https://www.tradingview.com/widgetembed/?frameElementId=chart-${index}&symbol=BINANCE%3A${item.ticker.replace('-USD', '')}USDT&interval=D&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Etc%2FUTC&locale=en"
+                                        ></iframe>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-section">
+                                    <h4>📊 Analysis Summary</h4>
+                                    <p><strong>Crypto:</strong> ${item.ticker.replace('-USD', '')} (${item.cmc_name || 'Unknown'})</p>
+                                    <p><strong>Score:</strong> ${item.score}/100 - ${item.score >= 80 ? 'Very Strong' : item.score >= 60 ? 'Strong' : item.score >= 40 ? 'Moderate' : 'Weak'} Trend</p>
+                                    <p><strong>Market Cap Rank:</strong> #${rank}</p>
+                                    <p><strong>Current Price:</strong> $${priceFormatted}</p>
+                                    <p><strong>All-Time High (ATH):</strong> $${item.ath >= 1 ? item.ath.toFixed(2) : item.ath.toFixed(6)} <span style="color: ${item.distance_from_ath >= -10 ? '#10b981' : item.distance_from_ath >= -30 ? '#f59e0b' : '#ef4444'};">(${item.distance_from_ath.toFixed(1)}% from ATH)</span></p>
+                                    <p><strong>All-Time Low (ATL):</strong> $${item.atl >= 1 ? item.atl.toFixed(2) : item.atl.toFixed(6)} <span style="color: #10b981;">(+${item.distance_from_atl.toFixed(0)}% from ATL)</span></p>
+                                    <p><strong>Criteria Met:</strong> ${item.criteria_met}</p>
+                                    ${item.warnings.length > 0 ? `<p style="color: #f59e0b;"><strong>⚠️ Warnings:</strong> ${item.warnings.join(', ')}</p>` : ''}
+                                    <div style="margin-top: 10px; padding: 10px; background: ${item.distance_from_ath >= -10 ? '#dcfce7' : item.distance_from_ath >= -50 ? '#fef3c7' : '#fee2e2'}; border-radius: 6px;">
+                                        <strong>${item.distance_from_ath >= -10 ? '🔥 Near ATH!' : item.distance_from_ath >= -30 ? '📈 Good Entry Zone' : item.distance_from_ath >= -50 ? '💎 Recovery Potential' : '⚠️ Deep Drawdown'}</strong>
+                                        <p style="margin: 5px 0 0 0; font-size: 0.9em;">${item.distance_from_ath >= -10 ? 'Trading near all-time highs - strong momentum but watch for pullbacks' : item.distance_from_ath >= -30 ? 'Moderate correction from ATH - good risk/reward if trend is strong' : item.distance_from_ath >= -50 ? 'Significant discount from ATH - high upside if recovery occurs' : 'Very far from ATH - ensure strong fundamentals before entering'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-section">
+                                    <h4>🎯 Entry Strategy (2 OPTIONS)</h4>
+                                    <p><strong>Current Price:</strong> $${priceFormatted}</p>
+                                    <p><strong>Distance to Support:</strong> ${item.distance_to_support.toFixed(1)}% below current price</p>
+                                    <p><strong>Distance to Resistance:</strong> ${item.distance_to_resistance.toFixed(1)}% above current price</p>
+                                    
+                                    <div style="background: #e0f2fe; padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #0284c7;">
+                                        <strong>📉 OPTION A - Pullback Entry (Conservative)</strong>
+                                        <p style="margin: 5px 0;">⏳ Wait for price to drop to support at $${supportFormatted}</p>
+                                        <p style="margin: 5px 0;">✅ Lower risk - better entry price</p>
+                                        <p style="margin: 5px 0;">⚠️ Risk: Price may never pull back (you miss the trade)</p>
+                                    </div>
+                                    
+                                    <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #f59e0b;">
+                                        <strong>📈 OPTION B - Buy Now/Breakout Entry (Aggressive)</strong>
+                                        <p style="margin: 5px 0;">🚀 Enter NOW at $${priceFormatted} OR on breakout above $${resistanceFormatted}</p>
+                                        <p style="margin: 5px 0;">✅ Don't miss strong uptrends</p>
+                                        <p style="margin: 5px 0;">⚠️ Risk: Higher entry = less profit potential, wider stop needed</p>
+                                    </div>
+                                    
+                                    <p style="color: #10b981; font-weight: bold; margin-top: 10px;">
+                                        ✓ ${item.score >= 70 ? 'STRONG TREND - Consider Option B (buy now before it runs away)' : 
+                                             item.score >= 60 ? 'GOOD SETUP - Option A preferred (wait for pullback) OR Option B if score improving' : 
+                                             item.score >= 40 ? 'MODERATE - Option A only (wait for better entry)' : 
+                                             'WEAK - Wait for score >60 before entering'}
+                                    </p>
+                                </div>
+                                
+                                <div class="detail-section">
+                                    <h4>🛡️ Risk Management</h4>
+                                    <p><strong>Stop Loss:</strong> $${stopLossFormatted} (EXIT if price drops here)</p>
+                                    <p><strong>Risk Per Trade:</strong> ${item.stop_loss_pct.toFixed(1)}% (Set stop at 2x ATR below entry)</p>
+                                    <p><strong>Position Size:</strong> Risk max 1-2% of portfolio</p>
+                                    <p><strong>Risk:Reward Ratio:</strong> ${item.risk_reward.toFixed(1)}:1 ${item.risk_reward >= 2 ? '✅ Good' : '⚠️ Low'}</p>
+                                    <p style="color: #ef4444;"><strong>❗ Never risk more than 2% on a single trade!</strong></p>
+                                </div>
+                                
+                                <div class="detail-section">
+                                    <h4>💰 Profit Targets (Where to SELL)</h4>
+                                    <p><strong>Take Profit 1 (50%):</strong> $${resistanceFormatted} - Sell 50% of position at resistance</p>
+                                    <p><strong>Take Profit 2 (50%):</strong> Trail remaining 50% with stop loss</p>
+                                    <p><strong>Potential Gain:</strong> ${item.distance_to_resistance.toFixed(1)}% to first target</p>
+                                    <p style="color: #10b981;"><strong>✓ Strategy:</strong> Take partial profits at resistance, let winners run with trailing stop</p>
+                                    <p><strong>Exit Signals:</strong> Sell all if RSI > 75, volume divergence, or weekly trend breaks</p>
+                                </div>
+                                
+                                <div class="detail-section">
+                                    <h4>📈 Complete Trading Plan</h4>
+                                    <p style="background: #ddd6fe; padding: 10px; border-radius: 5px; margin-bottom: 10px;"><strong>👉 Choose your entry strategy first (see Entry Strategy section above)</strong></p>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <strong style="color: #0284c7;">📉 IF CHOOSING OPTION A (Pullback Entry):</strong>
+                                        <ol style="margin: 5px 0; padding-left: 20px;">
+                                            <li>Set ALERT at support price $${supportFormatted}</li>
+                                            <li>Wait for price to drop to support</li>
+                                            <li><strong>BUY:</strong> Enter at $${supportFormatted} when support is touched</li>
+                                            <li><strong>STOP LOSS:</strong> $${stopLossFormatted} (${item.stop_loss_pct.toFixed(1)}% risk)</li>
+                                            <li><strong>SELL 50%:</strong> At resistance $${resistanceFormatted} (${item.distance_to_resistance.toFixed(1)}% gain)</li>
+                                            <li><strong>TRAIL 50%:</strong> Move stop to breakeven, let it run</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 15px;">
+                                        <strong style="color: #f59e0b;">📈 IF CHOOSING OPTION B (Buy Now/Breakout):</strong>
+                                        <ol style="margin: 5px 0; padding-left: 20px;">
+                                            <li><strong>BUY NOW:</strong> Enter immediately at $${priceFormatted}</li>
+                                            <li><strong>STOP LOSS:</strong> Below support at $${supportFormatted} (wider stop needed!)</li>
+                                            <li><strong>SELL 50%:</strong> At resistance $${resistanceFormatted}</li>
+                                            <li><strong>TRAIL 50%:</strong> Trail with stop loss as price rises</li>
+                                            <li><strong>OR Wait for Breakout:</strong> Set BUY order above $${resistanceFormatted}, stop below $${priceFormatted}</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <p style="background: #dcfce7; padding: 10px; border-radius: 5px;"><strong>✅ Monitor:</strong> ${item.weekly_bullish ? 'Weekly trend supports - can be aggressive' : '⚠️ Weekly not confirmed - use Option A (wait for pullback)'}</p>
+                                    <p style="background: #fee2e2; padding: 10px; border-radius: 5px;"><strong>⚠️ Exit ALL if:</strong> ${item.volume_divergence ? 'Volume divergence detected - SELL NOW!' : 'RSI > 75 (overbought) OR price breaks support OR weekly trend reverses'}</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function toggleDetails(index) {
+            const detailRow = document.getElementById(`detail-${index}`);
+            detailRow.classList.toggle('show');
+        }
+        
+        function displaySectorPerformance(cryptos) {
+            // Group by sector
+            const sectors = {};
+            cryptos.forEach(crypto => {
+                const sector = crypto.sector || 'Other';
+                if (!sectors[sector]) {
+                    sectors[sector] = { count: 0, avgScore: 0, avgRR: 0, scores: [] };
+                }
+                sectors[sector].count++;
+                sectors[sector].scores.push(crypto.score);
+                sectors[sector].avgRR += crypto.risk_reward;
+            });
+            
+            // Calculate averages
+            Object.keys(sectors).forEach(sector => {
+                const data = sectors[sector];
+                data.avgScore = (data.scores.reduce((a, b) => a + b, 0) / data.count).toFixed(0);
+                data.avgRR = (data.avgRR / data.count).toFixed(1);
+            });
+            
+            // Sort by count
+            const sortedSectors = Object.entries(sectors).sort((a, b) => b[1].count - a[1].count);
+            
+            // Display
+            const sectorGrid = document.getElementById('sectorGrid');
+            const sectorColors = {
+                'Layer 1': '#3b82f6', 'Layer 2': '#8b5cf6', 'DeFi': '#10b981',
+                'Meme': '#f59e0b', 'Gaming': '#ec4899', 'AI': '#06b6d4',
+                'Oracle': '#6366f1', 'Privacy': '#64748b', 'Storage': '#14b8a6',
+                'Exchange': '#eab308', 'NFT': '#f97316', 'Other': '#9ca3af'
+            };
+            
+            sectorGrid.innerHTML = sortedSectors.map(([sector, data]) => `
+                <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid ${sectorColors[sector] || '#9ca3af'}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight: bold; color: ${sectorColors[sector] || '#9ca3af'}; margin-bottom: 8px; font-size: 0.95em;">${sector}</div>
+                    <div style="font-size: 0.85em; color: #666;">
+                        <div style="margin-bottom: 4px;"><strong>${data.count}</strong> cryptos</div>
+                        <div style="margin-bottom: 4px;">Avg Score: <strong style="color: ${data.avgScore >= 70 ? '#10b981' : data.avgScore >= 50 ? '#f59e0b' : '#6b7280'};">${data.avgScore}</strong></div>
+                        <div>Avg R:R: <strong style="color: ${data.avgRR >= 2 ? '#10b981' : '#6b7280'};">${data.avgRR}:1</strong></div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('sectorPerformance').style.display = 'block';
+        }
+        
+        async function exportCSV() {
+            try {
+                const response = await fetch('/export/csv');
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Results exported to: ${data.filename}`);
+                } else {
+                    alert('Export failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function showPositionCalculator() {
+            const html = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+                    <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;" onclick="event.stopPropagation()">
+                        <h2 style="margin-top: 0; color: #667eea;">📊 Position Size Calculator</h2>
+                        <div style="margin: 20px 0;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Account Size (USD)</label>
+                            <input type="number" id="calcAccountSize" value="10000" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Risk Per Trade (%)</label>
+                            <input type="number" id="calcRiskPercent" value="1" step="0.1" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                            <small style="color: #666;">Recommended: 1-2%</small>
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Entry Price</label>
+                            <input type="number" id="calcEntryPrice" step="0.000001" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Stop Loss Price</label>
+                            <input type="number" id="calcStopLoss" step="0.000001" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Target Price (Resistance)</label>
+                            <input type="number" id="calcTargetPrice" step="0.000001" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        </div>
+                        <button onclick="calculatePosition()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">Calculate</button>
+                        <div id="calcResults" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;"></div>
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="width: 100%; padding: 10px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+        
+        async function calculatePosition() {
+            const accountSize = parseFloat(document.getElementById('calcAccountSize').value);
+            const riskPercent = parseFloat(document.getElementById('calcRiskPercent').value);
+            const entryPrice = parseFloat(document.getElementById('calcEntryPrice').value);
+            const stopLoss = parseFloat(document.getElementById('calcStopLoss').value);
+            const targetPrice = parseFloat(document.getElementById('calcTargetPrice').value);
+            
+            if (!accountSize || !riskPercent || !entryPrice || !stopLoss || !targetPrice) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/calculate-position', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        account_size: accountSize,
+                        risk_percent: riskPercent,
+                        entry_price: entryPrice,
+                        stop_loss: stopLoss,
+                        target_price: targetPrice
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const pos = data.position;
+                    const pl = data.profit_loss;
+                    
+                    const resultsHtml = `
+                        <h3 style="margin-top: 0; color: #667eea;">Results</h3>
+                        <div style="margin: 10px 0;">
+                            <strong>Position Size:</strong> ${pos.units.toFixed(4)} units<br>
+                            <strong>Position Value:</strong> $${pos.value_usd.toFixed(2)}<br>
+                            <strong>Risk Amount:</strong> <span style="color: #ef4444;">-$${pos.risk_usd.toFixed(2)}</span>
+                        </div>
+                        <div style="margin: 15px 0; padding-top: 15px; border-top: 2px solid #e0e0e0;">
+                            <strong style="color: #10b981;">Potential Profit:</strong> +$${pl.profit_usd.toFixed(2)} (+${pl.profit_pct.toFixed(2)}%)<br>
+                            <strong style="color: #ef4444;">Potential Loss:</strong> -$${pl.loss_usd.toFixed(2)} (-${pl.loss_pct.toFixed(2)}%)<br>
+                            <strong>Risk:Reward Ratio:</strong> ${pl.risk_reward.toFixed(2)}:1
+                        </div>
+                        <div style="background: ${pl.risk_reward >= 2 ? '#dcfce7' : '#fee2e2'}; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                            ${pl.risk_reward >= 2 ? '✅ Good risk:reward ratio!' : '⚠️ Low risk:reward ratio. Consider different entry/target.'}
+                        </div>
+                    `;
+                    
+                    document.getElementById('calcResults').innerHTML = resultsHtml;
+                    document.getElementById('calcResults').style.display = 'block';
+                } else {
+                    alert('Calculation failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function showCorrelation() {
+            try {
+                const response = await fetch('/correlation-analysis');
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; overflow: auto;" onclick="this.remove()">
+                            <div style="background: white; padding: 30px; border-radius: 15px; max-width: 90%; max-height: 90%; overflow: auto;" onclick="event.stopPropagation()">
+                                <h2 style="margin-top: 0; color: #667eea;">🔗 Correlation Matrix (Top 10 Cryptos)</h2>
+                                <p style="color: #666; margin-bottom: 20px;">Shows how cryptos move together. 1.0 = perfect correlation, 0.0 = no correlation, -1.0 = opposite movement</p>
+                                <div style="overflow-x: auto;">
+                                    <table style="border-collapse: collapse; min-width: 600px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="padding: 10px; background: #667eea; color: white; border: 1px solid #ddd;">Crypto</th>
+                    `;
+                    
+                    // Add column headers
+                    data.tickers.forEach(ticker => {
+                        html += `<th style="padding: 10px; background: #667eea; color: white; border: 1px solid #ddd; font-size: 0.85em;">${ticker.replace('-USD', '')}</th>`;
+                    });
+                    html += '</tr></thead><tbody>';
+                    
+                    // Add rows
+                    data.tickers.forEach((ticker, i) => {
+                        html += `<tr><td style="padding: 10px; background: #f8f9fa; font-weight: bold; border: 1px solid #ddd;">${ticker.replace('-USD', '')}</td>`;
+                        data.correlation_matrix[i].forEach(corr => {
+                            const color = corr >= 0.8 ? '#10b981' : corr >= 0.5 ? '#3b82f6' : corr >= 0.3 ? '#f59e0b' : '#ef4444';
+                            html += `<td style="padding: 10px; text-align: center; background: ${color}22; border: 1px solid #ddd; color: ${color}; font-weight: bold;">${corr.toFixed(2)}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                                </div>
+                                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                    <strong>💡 Diversification Tip:</strong> Choose cryptos with lower correlation (< 0.7) to reduce portfolio risk. High correlation means they move together.
+                                </div>
+                                <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: 600;">Close</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', html);
+                } else {
+                    alert('Failed to load correlation data: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
