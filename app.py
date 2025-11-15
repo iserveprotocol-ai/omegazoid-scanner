@@ -38,8 +38,27 @@ def get_indicators(symbol):
         result = scanner.check_uptrend_criteria(ticker)
         
         if result:
+            # Safely extract values with defaults
+            adx_value = float(result.get('adx', 0))
+            rsi_value = float(result.get('rsi', 50))
+            price_value = float(result.get('price', 0))
+            support_value = float(result.get('support', 0))
+            resistance_value = float(result.get('resistance', 0))
+            
+            # Replace NaN/Inf with safe defaults
+            import math
+            if math.isnan(adx_value) or math.isinf(adx_value):
+                adx_value = 0
+            if math.isnan(rsi_value) or math.isinf(rsi_value):
+                rsi_value = 50
+            if math.isnan(price_value) or math.isinf(price_value):
+                price_value = 0
+            if math.isnan(support_value) or math.isinf(support_value):
+                support_value = 0
+            if math.isnan(resistance_value) or math.isinf(resistance_value):
+                resistance_value = 0
+            
             # Calculate trend strength from ADX
-            adx_value = result.get('adx', 0)
             if adx_value > 50:
                 trend_strength = 'Strong'
             elif adx_value > 25:
@@ -48,7 +67,6 @@ def get_indicators(symbol):
                 trend_strength = 'Weak'
             
             # Determine RSI signal
-            rsi_value = result.get('rsi', 50)
             if rsi_value < 30:
                 rsi_signal = 'Oversold'
             elif rsi_value > 70:
@@ -59,28 +77,31 @@ def get_indicators(symbol):
             return jsonify({
                 'success': True,
                 'symbol': symbol.upper(),
-                'price': round(result['price'], 8 if result['price'] < 1 else 4),
-                'rsi': round(result['rsi'], 2),
+                'price': round(price_value, 8 if price_value < 1 else 4),
+                'rsi': round(rsi_value, 2),
                 'rsi_signal': rsi_signal,
-                'adx': round(result['adx'], 2),
+                'adx': round(adx_value, 2),
                 'trend_strength': trend_strength,
-                'price_change_24h': round(result.get('cmc_24h_change', 0), 2),
-                'market_cap': result.get('market_cap', 0),
-                'volume_24h': result.get('volume', 0),
-                'support': round(result.get('support', 0), 8 if result.get('support', 0) < 1 else 4),
-                'resistance': round(result.get('resistance', 0), 8 if result.get('resistance', 0) < 1 else 4),
+                'price_change_24h': round(float(result.get('cmc_24h_change', 0)), 2),
+                'market_cap': float(result.get('market_cap', 0)),
+                'volume_24h': float(result.get('volume', 0)),
+                'support': round(support_value, 8 if support_value < 1 else 4),
+                'resistance': round(resistance_value, 8 if resistance_value < 1 else 4),
                 'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
         else:
             return jsonify({
                 'success': False,
-                'error': 'Unable to fetch data for this symbol. Try BTC, ETH, SOL, etc.'
+                'error': f'Unable to fetch data for {symbol.upper()}. Try BTC, ETH, SOL, etc.'
             }), 404
             
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in get_indicators: {error_trace}")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': f'Server error: {str(e)}'
         }), 500
 
 @app.route('/api/health')
