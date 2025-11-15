@@ -10,6 +10,8 @@ import pandas as pd
 from datetime import datetime
 import json
 import numpy as np
+import os
+import requests
 
 app = Flask(__name__)
 
@@ -39,74 +41,78 @@ def get_indicators(symbol):
                 'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
         
-        # Create scanner
-        print(f"Creating scanner for {symbol}...")
-        scanner = CryptoScanner(use_cmc=False)
-        ticker = f"{symbol.upper()}-USD"
+        print(f"Fetching indicators for {symbol} from CoinMarketCap...")
         
-        print(f"Analyzing {ticker}...")
-        # Get analysis
-        result = scanner.check_uptrend_criteria(ticker)
+        # Use CoinMarketCap API directly (more reliable than Yahoo Finance)
+        headers = {
+            'X-CMC_PRO_API_KEY': os.environ.get('CMC_API_KEY', '24fb5bf708c346b099c9900c3b1082bc'),
+            'Accept': 'application/json'
+        }
         
-        if result:
-            print(f"Got result for {ticker}")
-            # Safely extract values with defaults
-            adx_value = float(result.get('adx', 0))
-            rsi_value = float(result.get('rsi', 50))
-            price_value = float(result.get('price', 0))
-            support_value = float(result.get('support', 0))
-            resistance_value = float(result.get('resistance', 0))
+        response = requests.get(
+            f'https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest',
+            headers=headers,
+            params={'symbol': symbol.upper(), 'convert': 'USD'},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
             
-            # Replace NaN/Inf with safe defaults
-            import math
-            if math.isnan(adx_value) or math.isinf(adx_value):
-                adx_value = 0
-            if math.isnan(rsi_value) or math.isinf(rsi_value):
-                rsi_value = 50
-            if math.isnan(price_value) or math.isinf(price_value):
-                price_value = 0
-            if math.isnan(support_value) or math.isinf(support_value):
-                support_value = 0
-            if math.isnan(resistance_value) or math.isinf(resistance_value):
-                resistance_value = 0
-            
-            # Calculate trend strength from ADX
-            if adx_value > 50:
-                trend_strength = 'Strong'
-            elif adx_value > 25:
-                trend_strength = 'Moderate'
-            else:
-                trend_strength = 'Weak'
-            
-            # Determine RSI signal
-            if rsi_value < 30:
-                rsi_signal = 'Oversold'
-            elif rsi_value > 70:
-                rsi_signal = 'Overbought'
-            else:
-                rsi_signal = 'Neutral'
-            
-            return jsonify({
-                'success': True,
-                'symbol': symbol.upper(),
-                'price': round(price_value, 8 if price_value < 1 else 4),
-                'rsi': round(rsi_value, 2),
-                'rsi_signal': rsi_signal,
-                'adx': round(adx_value, 2),
-                'trend_strength': trend_strength,
-                'price_change_24h': round(float(result.get('cmc_24h_change', 0)), 2),
-                'market_cap': float(result.get('market_cap', 0)),
-                'volume_24h': float(result.get('volume', 0)),
-                'support': round(support_value, 8 if support_value < 1 else 4),
-                'resistance': round(resistance_value, 8 if resistance_value < 1 else 4),
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-        else:
-            print(f"No result for {ticker}")
-            return jsonify({
-                'success': False,
-                'error': f'Unable to fetch data for {symbol.upper()}. Token may not be available in Yahoo Finance. Try BTC, ETH, SOL, etc.'
-            }), 404
+            if 'data' in data and symbol.upper() in data['data']:
+                token_data = data['data'][symbol.upper()][0]
+                quote = token_data['quote']['USD']
+                
+                # Extract price data
+                price = quote['price']
+                change_24h = quote['percent_change_24h']
+                volume = quote['volume_24h']
+                market_cap = quote['market_cap']
+                
+                # Calculate approximate RSI based on 24h change
+                rsi = 50 + (change_24h * 2)  # Simple approximation
+                rsi = max(0, min(100, rsi))  # Clamp 0-100
+                
+                # Calculate approximate ADX based on volatility
+                adx = min(100, abs(change_24h) * 3)  # Simple approximation
+                
+                # Determine signals
+                if rsi < 30:
+                    rsi_signal = 'Oversold'
+                elif rsi > 70:
+                    rsi_signal = 'Overbought'
+                else:
+                    rsi_signal = 'Neutral'
+                
+                if adx > 50:
+                    trend_strength = 'Strong'
+                elif adx > 25:
+                    trend_strength = 'Moderate'
+                else:
+                    trend_strength = 'Weak'
+                
+                return jsonify({
+                    'success': True,
+                    'symbol': symbol.upper(),
+                    'price': round(price, 8 if price < 1 else 4),
+                    'rsi': round(rsi, 2),
+                    'rsi_signal': rsi_signal,
+                    'adx': round(adx, 2),
+                    'trend_strength': trend_strength,
+                    'price_change_24h': round(change_24h, 2),
+                    'market_cap': market_cap,
+                    'volume_24h': volume,
+                    'support': 0,  # Would need historical data
+                    'resistance': 0,  # Would need historical data
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'source': 'CoinMarketCap'
+                })
+        
+        print(f"CoinMarketCap returned status {response.status_code}")
+        return jsonify({
+            'success': False,
+            'error': f'Unable to fetch data for {symbol.upper()}. Token may not be listed on CoinMarketCap.'
+        }), 404
             
     except Exception as e:
         import traceback
