@@ -30,14 +30,26 @@ def get_indicators(symbol):
     Example: /api/indicators/BTC
     """
     try:
+        # Simple response for testing
+        if symbol.upper() == 'TEST':
+            return jsonify({
+                'success': True,
+                'symbol': 'TEST',
+                'message': 'Scanner API is working!',
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+        
         # Create scanner
+        print(f"Creating scanner for {symbol}...")
         scanner = CryptoScanner(use_cmc=False)
         ticker = f"{symbol.upper()}-USD"
         
+        print(f"Analyzing {ticker}...")
         # Get analysis
         result = scanner.check_uptrend_criteria(ticker)
         
         if result:
+            print(f"Got result for {ticker}")
             # Safely extract values with defaults
             adx_value = float(result.get('adx', 0))
             rsi_value = float(result.get('rsi', 50))
@@ -90,18 +102,20 @@ def get_indicators(symbol):
                 'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
         else:
+            print(f"No result for {ticker}")
             return jsonify({
                 'success': False,
-                'error': f'Unable to fetch data for {symbol.upper()}. Try BTC, ETH, SOL, etc.'
+                'error': f'Unable to fetch data for {symbol.upper()}. Token may not be available in Yahoo Finance. Try BTC, ETH, SOL, etc.'
             }), 404
             
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"Error in get_indicators: {error_trace}")
+        print(f"ERROR in get_indicators: {error_trace}")
         return jsonify({
             'success': False,
-            'error': f'Server error: {str(e)}'
+            'error': f'Server error: {str(e)}',
+            'type': type(e).__name__
         }), 500
 
 @app.route('/api/health')
