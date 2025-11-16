@@ -137,6 +137,7 @@ def health_check():
 def get_top_trending():
     """
     Get top 5 trending cryptocurrencies by RSI and momentum
+    Scans top 150 tokens by market cap for best opportunities
     Returns: Top 5 tokens with highest RSI + positive momentum
     """
     try:
@@ -148,11 +149,11 @@ def get_top_trending():
             'Accept': 'application/json'
         }
         
-        # Get top 50 tokens by market cap
+        # Get top 150 tokens by market cap
         response = requests.get(
             'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
             headers=headers,
-            params={'start': '1', 'limit': '50', 'convert': 'USD'},
+            params={'start': '1', 'limit': '150', 'convert': 'USD'},
             timeout=15
         )
         
