@@ -133,6 +133,85 @@ def health_check():
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
 
+@app.route('/api/top-trending')
+def get_top_trending():
+    """
+    Get top 5 trending cryptocurrencies by RSI and momentum
+    Returns: Top 5 tokens with highest RSI + positive momentum
+    """
+    try:
+        print("Fetching top trending tokens...")
+        
+        # Use CoinMarketCap to get top tokens
+        headers = {
+            'X-CMC_PRO_API_KEY': os.environ.get('CMC_API_KEY', '24fb5bf708c346b099c9900c3b1082bc'),
+            'Accept': 'application/json'
+        }
+        
+        # Get top 50 tokens by market cap
+        response = requests.get(
+            'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
+            headers=headers,
+            params={'start': '1', 'limit': '50', 'convert': 'USD'},
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            if 'data' in data:
+                trending = []
+                
+                for token in data['data']:
+                    quote = token['quote']['USD']
+                    change_24h = quote['percent_change_24h']
+                    
+                    # Calculate RSI approximation
+                    rsi = 50 + (change_24h * 2)
+                    rsi = max(0, min(100, rsi))
+                    
+                    # Calculate momentum score (RSI + 24h change)
+                    momentum_score = rsi + (change_24h * 5)
+                    
+                    # Only include tokens with positive momentum and RSI > 50
+                    if rsi > 50 and change_24h > 0:
+                        trending.append({
+                            'symbol': token['symbol'],
+                            'name': token['name'],
+                            'price': round(quote['price'], 8 if quote['price'] < 1 else 4),
+                            'change_24h': round(change_24h, 2),
+                            'rsi': round(rsi, 2),
+                            'momentum_score': round(momentum_score, 2),
+                            'market_cap': quote['market_cap'],
+                            'volume_24h': quote['volume_24h']
+                        })
+                
+                # Sort by momentum score and get top 5
+                trending.sort(key=lambda x: x['momentum_score'], reverse=True)
+                top_5 = trending[:5]
+                
+                return jsonify({
+                    'success': True,
+                    'count': len(top_5),
+                    'data': top_5,
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                })
+        
+        return jsonify({
+            'success': False,
+            'error': 'Unable to fetch trending data from CoinMarketCap'
+        }), 404
+            
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR in get_top_trending: {error_trace}")
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}',
+            'type': type(e).__name__
+        }), 500
+
 @app.route('/')
 def index():
     """Main page"""
@@ -389,6 +468,37 @@ def apply_preset_filter(results, preset):
         return results[results['ticker'].isin(large_caps)]
     else:
         return results
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors with JSON response"""
+    return jsonify({
+        'success': False,
+        'error': 'Endpoint not found',
+        'message': 'The requested URL was not found on the server.'
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors with JSON response"""
+    return jsonify({
+        'success': False,
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred. Please try again later.'
+    }), 500
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    """Handle all unhandled exceptions with JSON response"""
+    import traceback
+    error_trace = traceback.format_exc()
+    print(f"UNHANDLED EXCEPTION: {error_trace}")
+    return jsonify({
+        'success': False,
+        'error': 'Server error',
+        'message': str(error),
+        'type': type(error).__name__
+    }), 500
 
 if __name__ == '__main__':
     print("\n" + "=" * 80)
