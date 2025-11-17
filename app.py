@@ -28,6 +28,7 @@ def get_indicators(symbol):
     """
     Quick technical indicators for OmegaZoid chat widget
     Returns: RSI, ADX, price, trend analysis
+    Data sources: CoinMarketCap (primary), CoinGecko (fallback)
     
     Example: /api/indicators/BTC
     """
@@ -43,15 +44,15 @@ def get_indicators(symbol):
         
         print(f"Fetching indicators for {symbol} from CoinMarketCap...")
         
-        # Use CoinMarketCap API directly (more reliable than Yahoo Finance)
-        headers = {
+        # Try CoinMarketCap first (primary source)
+        cmc_headers = {
             'X-CMC_PRO_API_KEY': os.environ.get('CMC_API_KEY', '24fb5bf708c346b099c9900c3b1082bc'),
             'Accept': 'application/json'
         }
         
         response = requests.get(
             f'https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest',
-            headers=headers,
+            headers=cmc_headers,
             params={'symbol': symbol.upper(), 'convert': 'USD'},
             timeout=10
         )
@@ -108,10 +109,89 @@ def get_indicators(symbol):
                     'source': 'CoinMarketCap'
                 })
         
-        print(f"CoinMarketCap returned status {response.status_code}")
+        # Fallback to CoinGecko if CoinMarketCap fails
+        print(f"CoinMarketCap failed, trying CoinGecko for {symbol}...")
+        
+        # Map common symbols to CoinGecko IDs
+        symbol_to_id = {
+            'BTC': 'bitcoin',
+            'ETH': 'ethereum',
+            'SOL': 'solana',
+            'BNB': 'binancecoin',
+            'XRP': 'ripple',
+            'ADA': 'cardano',
+            'DOGE': 'dogecoin',
+            'MATIC': 'matic-network',
+            'DOT': 'polkadot',
+            'AVAX': 'avalanche-2',
+            'LINK': 'chainlink',
+            'UNI': 'uniswap',
+            'ATOM': 'cosmos',
+            'LTC': 'litecoin'
+        }
+        
+        coin_id = symbol_to_id.get(symbol.upper(), symbol.lower())
+        
+        cg_response = requests.get(
+            f'https://api.coingecko.com/api/v3/coins/{coin_id}',
+            headers={'x-cg-demo-api-key': 'CG-fbR92cDk22Pf3WBBjbkrrzAE'},
+            params={'localization': 'false', 'tickers': 'false', 'community_data': 'false', 'developer_data': 'false'},
+            timeout=10
+        )
+        
+        if cg_response.status_code == 200:
+            cg_data = cg_response.json()
+            market_data = cg_data.get('market_data', {})
+            
+            if market_data:
+                price = market_data['current_price'].get('usd', 0)
+                change_24h = market_data['price_change_percentage_24h'] or 0
+                volume = market_data['total_volume'].get('usd', 0)
+                market_cap = market_data['market_cap'].get('usd', 0)
+                
+                # Calculate approximate RSI based on 24h change
+                rsi = 50 + (change_24h * 2)
+                rsi = max(0, min(100, rsi))
+                
+                # Calculate approximate ADX based on volatility
+                adx = min(100, abs(change_24h) * 3)
+                
+                # Determine signals
+                if rsi < 30:
+                    rsi_signal = 'Oversold'
+                elif rsi > 70:
+                    rsi_signal = 'Overbought'
+                else:
+                    rsi_signal = 'Neutral'
+                
+                if adx > 50:
+                    trend_strength = 'Strong'
+                elif adx > 25:
+                    trend_strength = 'Moderate'
+                else:
+                    trend_strength = 'Weak'
+                
+                return jsonify({
+                    'success': True,
+                    'symbol': symbol.upper(),
+                    'price': round(price, 8 if price < 1 else 4),
+                    'rsi': round(rsi, 2),
+                    'rsi_signal': rsi_signal,
+                    'adx': round(adx, 2),
+                    'trend_strength': trend_strength,
+                    'price_change_24h': round(change_24h, 2),
+                    'market_cap': market_cap,
+                    'volume_24h': volume,
+                    'support': 0,
+                    'resistance': 0,
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'source': 'CoinGecko'
+                })
+        
+        print(f"Both CoinMarketCap and CoinGecko failed for {symbol}")
         return jsonify({
             'success': False,
-            'error': f'Unable to fetch data for {symbol.upper()}. Token may not be listed on CoinMarketCap.'
+            'error': f'Unable to fetch data for {symbol.upper()}. Token may not be listed.'
         }), 404
             
     except Exception as e:
